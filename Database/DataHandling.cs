@@ -1,6 +1,6 @@
 ﻿using SkyFlowManagement.Model;
 
-namespace SkyFlowManagement.Model
+namespace SkyFlowManagement.Database
 {
     // List of methods that will be used by other class specifically within the UI directory.
     // The are current empty till used.
