@@ -1,0 +1,68 @@
+﻿using SkyFlowManagement.Model;
+
+namespace SkyFlowManagement.Model
+{
+    // List of methods that will be used by other class specifically within the UI directory.
+    // The are current empty till used.
+ 
+    public class DataHandling
+    {
+        // --- User ---
+
+        // Finds a user in the database by their username else return a null value.
+        User? getUserByUsername(string username);
+
+        // Adds a new staff member to the database.
+        void addUser(string username, string passwordHash, string role, string email, string firstName, string lastName);
+
+
+        // --- Flights ---
+
+        // Gets every flight in the system as a list.
+        List<Flight> getAllFlights();
+
+        //Looks for specific flight depending on flight number, else return a null value
+        Flight? getFlightByNumber(string flightNumber);
+
+        // Adds a brand new flight to the database.
+        void addFlight(string flightNumber, string origin, string destination, DateTime departureTime, DateTime arrivalTime, int capacity, int gateAgentId);
+
+        // Changes a flight's status e.g. from "Scheduled" to "Boarding".
+        void updateFlightStatus(string flightNumber, string newStatus);
+
+
+        // --- Passengers & Bookings ---
+
+        // Gets all passengers on a specific flight.
+        // Added togther cause you need both when boarding.
+        List<(Passenger Passenger, Booking Booking)> getPassengersByFlightNumber(string flightNumber);
+
+        // Search's for one specific passenger on a flight 
+        (Passenger Passenger, Booking Booking)? getPassengerBySearch(string flightNumber, string search);
+
+        // Updates a passenger's booking status e.g. "CheckedIn" or "Boarded".
+       // implemented without data till an action is taken.
+        void updateBookingStatus(int bookingId, string newStatus, DateTime? checkInTime, DateTime? boardingTime);
+
+
+        // --- Aircraft ---
+
+        // Gets a list of all aircrafts in the database.
+        List<Aircraft> getAllAircraft();
+
+
+        // --- Airport ---
+
+        // Gets a list of all airports in the database.
+        List<Airport> getAllAirports();
+
+
+        // --- Crew ---
+
+        // Gets a list of all crew members.
+        List<Crew> getAllCrew();
+
+        // Adds a new crew member to the database.
+        void addCrew(int userId, string crewType, string licenseNumber, int yearsOfExperience);
+    }
+}

@@ -1,0 +1,44 @@
+﻿using SkyFlow.Models;
+using SkyFlow.Interfaces;
+using SkyFlowManagement.Database;
+using SkyFlowManagement.UI;
+
+namespace SkyFlowManagement
+{
+    internal class Program
+    {
+        static void Main()
+        {
+            string connectionString = "Server=YourServerName;Database=dbSkyFlow;Trusted_Connection=True;TrustServerCertificate=True;";
+
+            DataHandling repository = new SQLRepo(connectionString);
+
+            LoginScreen loginScreen = new LoginScreen(repository);
+
+            bool appRunning = true;
+
+            while (appRunning)
+            {
+                User? user = loginScreen.Show();
+
+                if (user == null) continue;
+
+                if (user is Admin admin)
+                {
+                    AdminDashBoard adminDashboard = new AdminDashBoard(admin, repository);
+                    adminDashboard.Show();
+                }
+                else if (user is GateAgent gateAgent)
+                {
+                    GateAgentDashboard gateAgentDashboard = new GateAgentDashboard(gateAgent, repository);
+                    gateAgentDashboard.Show();
+                }
+
+                Console.Clear();
+                Console.WriteLine(" You have been logged out.");
+                Console.WriteLine(" Press any key to return to the login screen, or close the window to exit.");
+                Console.ReadKey();
+            }
+        }
+    }
+}

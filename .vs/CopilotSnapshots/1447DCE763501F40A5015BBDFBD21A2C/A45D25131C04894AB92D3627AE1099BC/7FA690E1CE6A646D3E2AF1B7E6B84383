@@ -1,0 +1,103 @@
+﻿using SkyFlowManagement.Database;
+using SkyFlowManagement.Logic;
+using SkyFlowManagement.Model;
+
+namespace SkyFlowManagement.UI
+{
+    public class GateAgentDashboard
+    {
+        private readonly GateAgent _gateAgent;
+        private readonly FlightService _flightService;
+
+        public GateAgentDashboard(GateAgent gateAgent, DataHandling repository)
+        {
+            _gateAgent = gateAgent;
+            _flightService = new FlightService(repository);
+        }
+
+        public void Show()
+        {
+            bool running = true;
+
+            while (running)
+            {
+                Console.Clear();
+
+                // Polymorphism: GateAgentDashboard uses the FlightService class.
+                // This allows this class to not have to communicate to the database directly.
+                _gateAgent.displayDashboard();
+
+                Console.Write("\n Select option: ");
+                string input = Console.ReadLine() ?? "";
+
+                switch (input.Trim())
+                {
+                    case "1":
+                        viewFlightManifest();
+                        break;
+                    case "2":
+                        passengerCheckIn();
+                        break;
+                    case "3":
+                        boardingGate();
+                        break;
+                    case "0":
+                        running = false;
+                        break;
+                    default:
+                        Console.WriteLine("\n Invalid option. Press any key to try again.");
+                        Console.ReadKey();
+                        break;
+                }
+            }
+        }
+
+        private void viewFlightManifest()
+        {
+            Console.Clear();
+            Console.WriteLine(" Flight Manifest");
+            Console.WriteLine(" ----------------");
+            Console.Write(" Enter Flight Number: ");
+            string flightNumber = Console.ReadLine() ?? "";
+
+            _flightService.viewFlightManifest(flightNumber);
+
+            Console.WriteLine("\n Press any key to continue.");
+            Console.ReadKey();
+        }
+
+        private void passengerCheckIn()
+        {
+            Console.Clear();
+            Console.WriteLine(" Passenger Check-In");
+            Console.WriteLine(" -------------------");
+            Console.Write(" Enter Flight Number: ");
+            string flightNumber = Console.ReadLine() ?? "";
+
+            Console.Write(" Enter Passenger ID or Passport Number: ");
+            string search = Console.ReadLine() ?? "";
+
+            _flightService.checkInPassenger(flightNumber, search);
+
+            Console.WriteLine("\n Press any key to continue.");
+            Console.ReadKey();
+        }
+
+        private void boardingGate()
+        {
+            Console.Clear();
+            Console.WriteLine(" Boarding Gate");
+            Console.WriteLine(" --------------");
+            Console.Write(" Enter Flight Number: ");
+            string flightNumber = Console.ReadLine() ?? "";
+
+            Console.Write(" Enter Passenger ID or Passport Number: ");
+            string search = Console.ReadLine() ?? "";
+
+            _flightService.boardPassenger(flightNumber, search);
+
+            Console.WriteLine("\n Press any key to continue.");
+            Console.ReadKey();
+        }
+    }
+}
