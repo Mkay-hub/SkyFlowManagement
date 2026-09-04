@@ -1,0 +1,353 @@
+﻿using SkyFlowManagement.Database;
+using SkyFlowManagement.Model;
+using SkyFlowManagement.Render;
+
+namespace SkyFlowManagement.Logic
+{
+    // FlightService handles all logic related to flights and passengers.
+    // The dashboards call methods here without direct communication to the database.
+
+    public class FlightService
+    {
+        private readonly DataHandling _repository;
+
+        public FlightService(DataHandling repository)
+        {
+            _repository = repository;
+        }
+
+        // ************************************************
+        //          --- Admin: View All Flights ---
+        // ************************************************
+
+        public void ViewAllFlights()
+        {
+            // Gets all flights from the database.
+            List<Flight> flights = _repository.GetAllFlights();
+
+            if (flights.Count == 0)
+            {
+                Console.WriteLine(" No flights found.");
+                return;
+            }
+
+            // Defines the column headers of the table with the flight schedules:
+            string[] headers = { "Flight No", "Origin", "Destination", "Departure", "Arrival", "Capacity", "Occupancy", "Status" };
+
+            // Convert each flight into a string array row.
+            List<string[]> rows = flights.Select(f => new string[]
+            {
+                f.FlightNumber,
+                f.Origin,
+                f.Destination,
+                f.DepartureTime.ToString("dd/MM/yyyy HH:mm"),
+                f.ArrivalTime.ToString("dd/MM/yyyy HH:mm"),
+                f.Capacity.ToString(),
+                f.CurrentOccupancy.ToString(),
+                f.Status
+            }).ToList();
+
+            // Pass the data to the table renderer class.
+            TableCreate.Render(headers, rows);
+        }
+
+
+        // ************************************************
+        //         --- Admin: Add New Flight ---
+        // ************************************************
+
+        public void AddFlight()
+        {
+            Console.Clear();
+            Console.WriteLine(" Add New Flight");
+            Console.WriteLine(" ---------------");
+
+            Console.Write(" Flight Number: ");
+            string flightNumber = Console.ReadLine() ?? "";
+
+            Console.Write(" Origin (e.g. CPT): ");
+            string origin = Console.ReadLine() ?? "";
+
+            Console.Write(" Destination (e.g. JHB): ");
+            string destination = Console.ReadLine() ?? "";
+
+            // Loops until a valid date is entered.
+            DateTime departureTime;
+            Console.Write(" Departure Time (dd/MM/yyyy HH:mm): ");
+            while (!DateTime.TryParseExact(Console.ReadLine(), "dd/MM/yyyy HH:mm",
+                null, System.Globalization.DateTimeStyles.None, out departureTime))
+            {
+                Console.Write(" Invalid format. Try again (dd/MM/yyyy HH:mm): ");
+            }
+
+            DateTime arrivalTime;
+            Console.Write(" Arrival Time (dd/MM/yyyy HH:mm): ");
+            while (!DateTime.TryParseExact(Console.ReadLine(), "dd/MM/yyyy HH:mm",
+                null, System.Globalization.DateTimeStyles.None, out arrivalTime))
+            {
+                Console.Write(" Invalid format. Try again (dd/MM/yyyy HH:mm): ");
+            }
+
+            // Loops until a valid number is entered.
+            int capacity;
+            Console.Write(" Capacity: ");
+            while (!int.TryParse(Console.ReadLine(), out capacity) || capacity <= 0)
+            {
+                Console.Write(" Invalid. Enter a number greater than 0: ");
+            }
+
+            int gateAgentId;
+            Console.Write(" Gate Agent ID: ");
+            while (!int.TryParse(Console.ReadLine(), out gateAgentId) || gateAgentId <= 0)
+            {
+                Console.Write(" Invalid. Enter a valid Gate Agent ID: ");
+            }
+
+            // Once all inputs are validated and collected,
+            // The are then stored into the database.
+            _repository.AddFlight(flightNumber, origin, destination, departureTime, arrivalTime, capacity, gateAgentId);
+            Console.WriteLine("\n Flight added successfully.");
+        }
+
+
+        // ******************************************
+        //          --- Admin: Add Staff ---
+        // ******************************************
+
+        public void AddStaff()
+        {
+            Console.Clear();
+            Console.WriteLine(" Add New Staff Member");
+            Console.WriteLine(" ---------------------");
+
+            Console.Write(" Username: ");
+            string username = Console.ReadLine() ?? "";
+
+            Console.Write(" Password: ");
+            string password = Console.ReadLine() ?? "";
+            string passwordHash = AuthService.HashPassword(password);
+
+            Console.Write(" Role (Admin / GateAgent): ");
+            string role = Console.ReadLine() ?? "";
+            while (role != "Admin" && role != "GateAgent")
+            {
+                Console.Write(" Invalid role. Enter Admin or GateAgent: ");
+                role = Console.ReadLine() ?? "";
+            }
+
+            Console.Write(" Email: ");
+            string email = Console.ReadLine() ?? "";
+
+            Console.Write(" First Name: ");
+            string firstName = Console.ReadLine() ?? "";
+
+            Console.Write(" Last Name: ");
+            string lastName = Console.ReadLine() ?? "";
+
+            _repository.AddUser(username, passwordHash, role, email, firstName, lastName);
+            Console.WriteLine("\n Staff member added successfully.");
+        }
+
+
+        // *************************************************
+        //      --- Gate Agent: View Flight Manifest ---
+        // *************************************************
+
+        public void ViewFlightManifest(string flightNumber)
+        {
+            // First check if the specific flight exists.
+            Flight? flight = _repository.GetFlightByNumber(flightNumber);
+            if (flight == null)
+            {
+                Console.WriteLine($" Flight {flightNumber} not found.");
+                return;
+            }
+
+            // Get all passengers on the  flight meantioned above.
+            List<(Passenger Passenger, Booking Booking)> manifest =
+                _repository.GetPassengersByFlightNumber(flightNumber);
+
+            if (manifest.Count == 0)
+            {
+                Console.WriteLine(" No passengers found for this flight.");
+                return;
+            }
+
+            Console.WriteLine($"\n Flight {flightNumber} — {flight.Origin} to {flight.Destination}");
+            Console.WriteLine($" Status: {flight.Status} | Occupancy: {flight.CurrentOccupancy}/{flight.Capacity}\n");
+
+            string[] headers = { "Passenger ID", "Passport", "Nationality", "Seat", "Status" };
+
+            List<string[]> rows = manifest.Select(x => new string[]
+            {
+                x.Passenger.PassengerId.ToString(),
+                x.Passenger.PassportNumber,
+                x.Passenger.Nationality,
+                x.Booking.SeatNumber,
+                x.Booking.BookingStatus
+            }).ToList();
+
+            TableCreate.Render(headers, rows);
+        }
+
+
+        // *********************************************
+        //     --- Gate Agent: Check In Passenger ---
+        // *********************************************
+
+        public void CheckInPassenger(string flightNumber, string search)
+        {
+            // Rule 1: The flight must exist.
+            Flight? flight = _repository.GetFlightByNumber(flightNumber);
+            if (flight == null)
+            {
+                Console.WriteLine($" Flight {flightNumber} not found.");
+                return;
+            }
+
+            // Rule 2: Passangers can't check in on a departed flight.
+            if (flight.Status == "Departed")
+            {
+                Console.WriteLine(" Cannot check in a passenger — this flight has already departed.");
+                return;
+            }
+
+            // Rule 3: Check for the specific passenger.
+            var result = _repository.GetPassengerBySearch(flightNumber, search);
+            if (result == null)
+            {
+                Console.WriteLine(" Passenger not found.");
+                return;
+            }
+
+            var (passenger, booking) = result.Value;
+
+            // Rule 4: if the passanger exists
+            // checks if passanger already checked in.
+            if (booking.BookingStatus == "CheckedIn")
+            {
+                Console.WriteLine($" {passenger.PassportNumber} is already checked in (Seat {booking.SeatNumber}).");
+                return;
+            }
+
+            // Rule 5: checks if passanger already boarded.
+            if (booking.BookingStatus == "Boarded")
+            {
+                Console.WriteLine($" {passenger.PassportNumber} has already boarded.");
+                return;
+            }
+
+            // Once all rules are followed and checked
+            // Passanger booking status is updated.
+            booking.checkIn();
+            _repository.UpdateBookingStatus(booking.BookingId, booking.BookingStatus, booking.CheckInTime, booking.BoardingTime);
+
+            Console.WriteLine($"\n Passenger found: {passenger.PassportNumber} (Seat {booking.SeatNumber})");
+            Console.WriteLine($" Status updated to: CheckedIn");
+        }
+
+
+        // ***********************************************
+        //      --- Gate Agent: Board Passenger ---
+        // ***********************************************
+
+        public void BoardPassenger(string flightNumber, string search)
+        {
+            //  Rule:1: The flight must exist.
+            Flight? flight = _repository.GetFlightByNumber(flightNumber);
+            if (flight == null)
+            {
+                Console.WriteLine($" Flight {flightNumber} not found.");
+                return;
+            }
+
+            // Rule 2: Passanger can't board on a departed flight.
+            if (flight.Status == "Departed")
+            {
+                Console.WriteLine(" Cannot board a passenger — this flight has already departed.");
+                return;
+            }
+
+            // Rule 3: Passanger cannot board if flight is full.
+            if (flight.isFull())
+            {
+                Console.WriteLine(" Cannot board — this flight is at full capacity.");
+                return;
+            }
+
+            // Checks for the specific passenger.
+            var result = _repository.GetPassengerBySearch(flightNumber, search);
+            if (result == null)
+            {
+                Console.WriteLine(" Passenger not found.");
+                return;
+            }
+
+            var (passenger, booking) = result.Value;
+
+            // Rule 4: Passangers must be checked in before boarding.
+            if (booking.BookingStatus != "CheckedIn")
+            {
+                Console.WriteLine($" Passenger must be checked in before boarding. Current status: {booking.BookingStatus}");
+                return;
+            }
+
+            // Confirmation information for user before boarding.
+            Console.WriteLine($"\n Passenger found: {passenger.PassportNumber} (Seat {booking.SeatNumber})");
+            Console.WriteLine($" Current status: {booking.BookingStatus}");
+            Console.Write(" Update status to Boarded? (Y/N): ");
+            string confirm = Console.ReadLine() ?? "";
+
+            if (confirm.ToUpper() != "Y")
+            {
+                Console.WriteLine(" Boarding cancelled.");
+                return;
+            }
+
+            // Once all rules are followed and checked
+            // Passanger booking status is updated.
+            // Passanger can then board the aircraft.
+            booking.board();
+            _repository.UpdateBookingStatus(booking.BookingId, booking.BookingStatus, booking.CheckInTime, booking.BoardingTime);
+
+            Console.WriteLine(" Status updated successfully.");
+        }
+
+
+        // *****************************************************
+        //      --- Gate Agent: Update Flight Status ---
+        // *****************************************************
+
+        public void UpdateFlightStatus(string flightNumber)
+        {
+            Flight? flight = _repository.GetFlightByNumber(flightNumber);
+            if (flight == null)
+            {
+                Console.WriteLine($" Flight {flightNumber} not found.");
+                return;
+            }
+
+            Console.WriteLine($" Current status: {flight.Status}");
+            Console.WriteLine(" New status options: Scheduled / Boarding / Departed / Delayed / Cancelled");
+            Console.Write(" Enter new status: ");
+            string newStatus = Console.ReadLine() ?? "";
+
+            string[] validStatuses = { "Scheduled", "Boarding", "Departed", "Delayed", "Cancelled" };
+            if (!validStatuses.Contains(newStatus))
+            {
+                Console.WriteLine(" Invalid status entered.");
+                return;
+            }
+
+            // If the flight is leaving, call the departFLight method.
+            // else update the status of the flight.
+            if (newStatus == "Departed")
+                flight.departFlight();
+            else
+                flight.updateStatus(newStatus);
+
+            _repository.UpdateFlightStatus(flightNumber, newStatus);
+            Console.WriteLine($" Flight status updated to: {newStatus}");
+        }
+    }
+}

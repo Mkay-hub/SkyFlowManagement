@@ -369,9 +369,9 @@ public class SQLRepo : DataHandling
         (int)reader["PassengerId"],
         (int)reader["UserId"],
         reader["PassportNumber"].ToString() ?? "",
-        (DateTime)reader["DateOfBirth"],
+        reader["DateOfBirth"] == DBNull.Value ? DateTime.MinValue : (DateTime)reader["DateOfBirth"],
         reader["Nationality"].ToString() ?? "",
-        reader["ContactNumber"].ToString() ?? ""
+        reader["ContactNumber"] == DBNull.Value ? string.Empty : reader["ContactNumber"].ToString() ?? ""
     );
 
     private Booking MapBooking(SqlDataReader reader) => new Booking(

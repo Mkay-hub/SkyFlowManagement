@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SkyFlowManagement")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d2eb3d315e198754cba3c32727b9849bf28c8558")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a9ba8d863939e97dd83ff3c73141f98c75933868")]
 [assembly: System.Reflection.AssemblyProductAttribute("SkyFlowManagement")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SkyFlowManagement")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

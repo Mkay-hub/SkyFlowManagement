@@ -57,3 +57,4 @@ C:\Users\mogom\OneDrive - Richfield Graduate Institute of Technology\BSc IT 3rd 
 C:\Users\mogom\OneDrive - Richfield Graduate Institute of Technology\BSc IT 3rd Year\Semester 1\Assigments\PROG-741\SkyFlowManagement\bin\Debug\net10.0\runtimes\win\lib\net9.0\System.Diagnostics.EventLog.dll
 C:\Users\mogom\OneDrive - Richfield Graduate Institute of Technology\BSc IT 3rd Year\Semester 1\Assigments\PROG-741\SkyFlowManagement\bin\Debug\net10.0\runtimes\win\lib\net9.0\System.Security.Cryptography.Pkcs.dll
 C:\Users\mogom\OneDrive - Richfield Graduate Institute of Technology\BSc IT 3rd Year\Semester 1\Assigments\PROG-741\SkyFlowManagement\obj\Debug\net10.0\SkyFlowM.DAEB787F.Up2Date
+C:\Users\mogom\OneDrive - Richfield Graduate Institute of Technology\BSc IT 3rd Year\Semester 1\Assigments\PROG-741\SkyFlowManagement\obj\Debug\net10.0\SkyFlowManagement.sourcelink.json
